@@ -28,8 +28,8 @@ class PlayerController {
     }
 
     @GetMapping("/players/count")
-    int count() {
-        return service.count();
+    int count(@RequestParam Map<String,String> request) {
+        return service.count(request);
     }
 
     @PostMapping("/players")
