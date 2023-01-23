@@ -34,20 +34,20 @@ public class PLayerService {
      */
     public List<Player> findAll(Map<String, String> playerParams) {
 
-        int pageNumber = Integer.parseInt(playerParams.get("pageNumber"));
+        int pageNumber = playerParams.get("pageNumber") != null ? Integer.parseInt(playerParams.get("pageNumber")) : 0;
         //DECLARING INITIAL VARIABLES FOR FILTERING
         String name = playerParams.get("name");
         String title = playerParams.get("title");
-        Race race = Race.valueOf(playerParams.get("race"));
-        Profession profession = Profession.valueOf(playerParams.get("profession"));
-        long after = Long.parseLong(playerParams.get("after"));
-        long before = Long.parseLong(playerParams.get("before"));
-        boolean banned = Boolean.parseBoolean(playerParams.get("banned"));
-        int minExperience = Integer.parseInt(playerParams.get("minExperience"));
-        int maxExperience = Integer.parseInt(playerParams.get("maxExperience"));
-        int minLevel = Integer.parseInt(playerParams.get("minLevel"));
-        int maxLevel = Integer.parseInt(playerParams.get("maxLevel"));
-        int pageSize = Integer.parseInt(playerParams.get("pageSize"));
+        Race race = playerParams.get("race") != null ? Race.valueOf(playerParams.get("race")) : null;
+        Profession profession = playerParams.get("profession") != null ? Profession.valueOf(playerParams.get("profession")) : null;
+        long after = playerParams.get("after") != null ? Long.parseLong(playerParams.get("after")) : 0;
+        long before = playerParams.get("before") != null ? Long.parseLong(playerParams.get("before")) : 0;
+        Boolean banned = playerParams.get("banned") != null ? Boolean.parseBoolean(playerParams.get("banned")) : null;
+        int minExperience = playerParams.get("minExperience") != null ? Integer.parseInt(playerParams.get("minExperience")) : 0;
+        int maxExperience = playerParams.get("maxExperience") != null ? Integer.parseInt(playerParams.get("maxExperience")) : 0;
+        int minLevel = playerParams.get("minLevel") != null ? Integer.parseInt(playerParams.get("minLevel")) : 0;
+        int maxLevel = playerParams.get("maxLevel") != null ? Integer.parseInt(playerParams.get("maxLevel")) : 0;
+        int pageSize = playerParams.get("pageSize") != null ? Integer.parseInt(playerParams.get("pageSize")) : 3;
         String playerOrder = PlayerOrder.valueOf(playerParams.get("order")).getFieldName();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(playerOrder));
         List<Player> players = playerRepository.findAll(pageable).toList();
@@ -79,16 +79,28 @@ public class PLayerService {
         if (before != 0) {
             players = players.stream().filter(player -> player.getBirthday().getTime() < before).collect(Collectors.toList());
         }
-        players = players.stream().
-                filter(player -> player.getRace().equals(race)).
-                filter(player -> player.getProfession().equals(profession)).
-                filter(player -> player.getBanned() == banned).
-                filter(player -> player.getExperience() > minExperience).
-                filter(player -> player.getExperience() < maxExperience).
-                filter(player -> player.getLevel() > minLevel).
-                filter(player -> player.getLevel() < maxLevel).
-                collect(Collectors.toList());
-
+        if (race != null) {
+            players = players.stream().
+                    filter(player -> player.getRace().equals(race)).collect(Collectors.toList());
+        }
+        if (profession != null) {
+            players = players.stream().filter(player -> player.getProfession().equals(profession)).collect(Collectors.toList());
+        }
+        if (banned != null) {
+            players = players.stream().filter(player -> player.getBanned().equals(banned)).collect(Collectors.toList());
+        }
+        if (minExperience != 0) {
+            players = players.stream().filter(player -> player.getExperience() > minExperience).collect(Collectors.toList());
+        }
+        if (maxExperience != 0) {
+            players = players.stream().filter(player -> player.getExperience() < maxExperience).collect(Collectors.toList());
+        }
+        if (minLevel != 0) {
+            players = players.stream().filter(player -> player.getLevel() > minLevel).collect(Collectors.toList());
+        }
+        if (maxLevel != 0) {
+            players = players.stream().filter(player -> player.getLevel() < maxLevel).collect(Collectors.toList());
+        }
         return players;
     }
 
