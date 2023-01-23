@@ -43,7 +43,7 @@ class PlayerController {
     }
 
     @PostMapping("/players/{id}")
-    public Player replacePlayer(@PathVariable String id, @RequestBody Player newPlayer) {
+    public ResponseEntity<Object> replacePlayer(@PathVariable String id, @RequestBody Player newPlayer) {
         return service.update(id, newPlayer);
     }
 

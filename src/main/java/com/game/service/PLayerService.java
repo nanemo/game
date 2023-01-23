@@ -1,6 +1,5 @@
 package com.game.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.game.controller.PlayerOrder;
 import com.game.entity.Player;
 import com.game.entity.Profession;
@@ -10,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,9 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static com.game.config.AppConfig.OBJECT_MAPPER;
 
 @Service
 @Validated
@@ -117,8 +116,12 @@ public class PLayerService {
  * error code 400.
  * */
 
-        if (player.getName().isEmpty() || player.getExperience() < 0 || player.getExperience() > 10000000
-                || player.getBirthday().getTime() < 0 ||player.getTitle().length()>30) {
+        if (isPlayerEmpty(player)
+                || player.getName().isEmpty()
+                || player.getExperience() < 0
+                || player.getExperience() > 10000000
+                || player.getBirthday().getTime() < 0
+                || player.getTitle().length() > 30) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, BAD_REQUEST_MESSAGE + player.getId());
         }
         player.setLevel(getCurrentLevel(player));
@@ -131,27 +134,35 @@ public class PLayerService {
         return playerRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_REQUEST_MESSAGE + sID));
     }
 
-    public Player update(String sID, Player newPlayer1) {
-        if (newPlayer1.getExperience() < 0 || newPlayer1.getExperience()>10000000) {
+    public ResponseEntity<Object> update(String sID, Player newPlayer1) {
+
+        Long id = catchException(sID);
+        Optional<Player> byId = playerRepository.findById(id);
+        if (byId.isPresent() && isPlayerEmpty(newPlayer1)) {
+            return ResponseEntity.ok(byId.get());
+        }
+        if ((newPlayer1.getExperience() != null
+                && (newPlayer1.getExperience() < 0
+                || newPlayer1.getExperience() > 10000000))
+                || (newPlayer1.getBirthday() != null && newPlayer1.getBirthday().getTime() < 0)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, BAD_REQUEST_MESSAGE + sID);
         }
-        Long id = catchException(sID);
-        return playerRepository.findById(id).map(player -> {
 
-            player.setName(newPlayer1.getName());
-            player.setTitle(newPlayer1.getTitle());
-            player.setRace(newPlayer1.getRace());
-            player.setProfession(newPlayer1.getProfession());
-            player.setBirthday(newPlayer1.getBirthday());
-            if (newPlayer1.getBanned() != null) {
-                player.setBanned(newPlayer1.getBanned());
-            } else {
-                player.setBanned(false);
-            }
+
+        return ResponseEntity.ok(byId.map(player -> {
+            player.setName(newPlayer1.getName() != null ? newPlayer1.getName() : player.getName());
+            player.setTitle(newPlayer1.getTitle() != null ? newPlayer1.getTitle() : player.getTitle());
+            player.setRace(newPlayer1.getRace() != null ? newPlayer1.getRace() : player.getRace());
+            player.setProfession(newPlayer1.getProfession() != null ? newPlayer1.getProfession() : player.getProfession());
+            player.setBirthday(newPlayer1.getBirthday() != null ? newPlayer1.getBirthday() : player.getBirthday());
+            player.setBanned(newPlayer1.getBanned() != null ? newPlayer1.getBanned() : false);
+            player.setLevel(newPlayer1.getLevel() != null ? newPlayer1.getLevel() : player.getLevel());
+            player.setUntilNextLevel(newPlayer1.getUntilNextLevel() != null ? newPlayer1.getUntilNextLevel() : player.getUntilNextLevel());
+            player.setExperience(newPlayer1.getExperience() != null ? newPlayer1.getExperience() : player.getExperience());
             return playerRepository.save(player);
         }).orElseThrow(() -> {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_REQUEST_MESSAGE + sID);
-        });
+        }));
     }
 
     public void delete(String sID) {
@@ -180,4 +191,15 @@ public class PLayerService {
         }
     }
 
+    private boolean isPlayerEmpty(Player player) {
+        return player.getBanned() == null &&
+                player.getId() == null &&
+                player.getRace() == null &&
+                player.getProfession() == null &&
+                player.getBirthday() == null &&
+                player.getTitle() == null &&
+                player.getLevel() == null &&
+                player.getName() == null &&
+                player.getUntilNextLevel() == null;
+    }
 }
