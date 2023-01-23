@@ -1,5 +1,6 @@
 package com.game.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.game.controller.PlayerOrder;
 import com.game.entity.Player;
 import com.game.entity.Profession;
@@ -13,9 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.game.config.AppConfig.OBJECT_MAPPER;
 
 @Service
 @Validated
@@ -58,36 +62,26 @@ public class PLayerService {
         }
 
         if (name != null) {
-            players = players
-                    .stream()
-                    .filter(player -> player.getName().toLowerCase().contains(name.toLowerCase()))
-                    .collect(Collectors.toList());
+            players = playerRepository.findAllByNameLike(name, pageable);
         }
         if (title != null) {
-            players = players
-                    .stream()
-                    .filter(player -> player.getTitle().toLowerCase().contains(title.toLowerCase()))
-                    .collect(Collectors.toList());
+            players = playerRepository.findAllByNameLikeAndTitleLike(name, title, pageable);
         }
 
         if (after != 0) {
-            players = players
-                    .stream()
-                    .filter(player -> player.getBirthday().getTime() > after)
-                    .collect(Collectors.toList());
+            players = playerRepository.findAllByNameLikeAndTitleLikeAndBirthdayBetween(name, title, new Date(after), new Date(), pageable);
         }
         if (before != 0) {
-            players = players.stream().filter(player -> player.getBirthday().getTime() < before).collect(Collectors.toList());
+            players = playerRepository.findAllByNameLikeAndTitleLikeAndBirthdayBetween(name, title, new Date(after), new Date(before), pageable);
         }
         if (race != null) {
-            players = players.stream().
-                    filter(player -> player.getRace().equals(race)).collect(Collectors.toList());
+            players = playerRepository.findAllByNameLikeAndTitleLikeAndBirthdayBetweenAndRace(name, title, new Date(after), new Date(before), race, pageable);
         }
         if (profession != null) {
-            players = players.stream().filter(player -> player.getProfession().equals(profession)).collect(Collectors.toList());
+            players = playerRepository.findAllByNameLikeAndTitleLikeAndBirthdayBetweenAndRaceAndProfession(name, title, new Date(after), new Date(before), race, profession, pageable);
         }
         if (banned != null) {
-            players = players.stream().filter(player -> player.getBanned().equals(banned)).collect(Collectors.toList());
+
         }
         if (minExperience != 0) {
             players = players.stream().filter(player -> player.getExperience() > minExperience).collect(Collectors.toList());
@@ -124,7 +118,7 @@ public class PLayerService {
  * */
 
         if (player.getName().isEmpty() || player.getExperience() < 0 || player.getExperience() > 10000000
-                || player.getBirthday().getTime() < 0) {
+                || player.getBirthday().getTime() < 0 ||player.getTitle().length()>30) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, BAD_REQUEST_MESSAGE + player.getId());
         }
         player.setLevel(getCurrentLevel(player));
@@ -137,16 +131,20 @@ public class PLayerService {
         return playerRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_REQUEST_MESSAGE + sID));
     }
 
-    public Player update(String sID, Player newPlayer) {
+    public Player update(String sID, Player newPlayer1) {
+        if (newPlayer1.getExperience() < 0 || newPlayer1.getExperience()>10000000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, BAD_REQUEST_MESSAGE + sID);
+        }
         Long id = catchException(sID);
         return playerRepository.findById(id).map(player -> {
-            player.setName(newPlayer.getName());
-            player.setTitle(newPlayer.getTitle());
-            player.setRace(newPlayer.getRace());
-            player.setProfession(newPlayer.getProfession());
-            player.setBirthday(newPlayer.getBirthday());
-            if (newPlayer.getBanned() != null) {
-                player.setBanned(newPlayer.getBanned());
+
+            player.setName(newPlayer1.getName());
+            player.setTitle(newPlayer1.getTitle());
+            player.setRace(newPlayer1.getRace());
+            player.setProfession(newPlayer1.getProfession());
+            player.setBirthday(newPlayer1.getBirthday());
+            if (newPlayer1.getBanned() != null) {
+                player.setBanned(newPlayer1.getBanned());
             } else {
                 player.setBanned(false);
             }

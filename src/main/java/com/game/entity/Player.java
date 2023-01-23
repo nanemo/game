@@ -13,7 +13,6 @@ import java.util.Date;
 @Table(name = "PLAYER", schema = "RPG")
 @Getter
 @Setter
-@ToString
 public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,5 +56,19 @@ public class Player {
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private Boolean banned;
 
-
+    @Override
+    public String toString() {
+        return "Player{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", title='" + title + '\'' +
+                ", race=" + race +
+                ", profession=" + profession +
+                ", experience=" + experience +
+                ", level=" + level +
+                ", untilNextLevel=" + untilNextLevel +
+                ", birthday=" + birthday +
+                ", banned=" + banned +
+                '}';
+    }
 }
