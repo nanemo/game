@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/rest")
@@ -21,8 +22,8 @@ class PlayerController {
 
 
     @GetMapping("/players")
-    List<Player> all() {
-        return service.findAll();
+    List<Player> all(@RequestParam Map<String, String> playerParams) {
+        return service.findAll(playerParams);
     }
 
     @GetMapping("/players/count")
@@ -35,19 +36,17 @@ class PlayerController {
         return service.create(player);
     }
 
-    // Single item
-
     @GetMapping("/players/{id}")
     Player getPlayer(@PathVariable String id) throws PlayerNotFoundException {
         return service.getPlayerById(id);
     }
 
-    @PutMapping("/employees/{id}")
-    Player replaceEmployee(@RequestBody Player newPlayer, @PathVariable String id) {
-        return service.update(newPlayer, id);
+    @PostMapping("/players/{id}")
+    Player replacePlayer(@PathVariable String id, @RequestBody Player newPlayer) {
+        return service.update(id, newPlayer);
     }
 
-    @DeleteMapping("/employees/{id}")
+    @DeleteMapping("/players/{id}")
     void deleteEmployee(@PathVariable String id) {
         service.delete(id);
     }

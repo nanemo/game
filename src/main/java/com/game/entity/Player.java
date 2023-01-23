@@ -2,6 +2,7 @@ package com.game.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Type;
 import org.springframework.lang.*;
 
@@ -12,10 +13,10 @@ import java.util.Date;
 @Table(name = "player", schema = "rpg")
 @Getter
 @Setter
+@ToString
 public class Player {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NonNull
     private Long id;
 
     @Column(name = "name", length = 12)
@@ -52,7 +53,7 @@ public class Player {
     @NonNull
     private Date birthday;
 
-    @Column(name = "banned", columnDefinition = "BIT")
+    @Column(name = "banned", columnDefinition = "false")
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private Boolean banned;
 
