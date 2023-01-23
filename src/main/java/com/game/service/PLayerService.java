@@ -48,7 +48,7 @@ public class PLayerService {
         int minLevel = playerParams.get("minLevel") != null ? Integer.parseInt(playerParams.get("minLevel")) : 0;
         int maxLevel = playerParams.get("maxLevel") != null ? Integer.parseInt(playerParams.get("maxLevel")) : 0;
         int pageSize = playerParams.get("pageSize") != null ? Integer.parseInt(playerParams.get("pageSize")) : 3;
-        String playerOrder = PlayerOrder.valueOf(playerParams.get("order")).getFieldName();
+        String playerOrder = PlayerOrder.valueOf(playerParams.get("order") != null ? playerParams.get("order") : "NAME").getFieldName();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(playerOrder));
         List<Player> players = playerRepository.findAll(pageable).toList();
 
