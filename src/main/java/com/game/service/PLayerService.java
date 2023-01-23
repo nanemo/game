@@ -138,7 +138,7 @@ public class PLayerService {
             } else {
                 player.setBanned(false);
             }
-            return playerRepository.saveAndFlush(player);
+            return playerRepository.save(player);
         }).orElseThrow(() -> {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND_REQUEST_MESSAGE + sID);
         });
