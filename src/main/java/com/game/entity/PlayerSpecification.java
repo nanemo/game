@@ -26,7 +26,7 @@ public class PlayerSpecification {
 
             if (request.get("after") != null || request.get("before") != null) {
                 Date after = new Date(request.get("after") != null ? Long.parseLong(request.get("after")) : 0);
-                Date before = new Date(request.get("before") != null ? Long.parseLong(request.get("before")) : Long.MAX_VALUE);
+                Date before = new Date(request.get("before") != null ? Long.parseLong(request.get("before")) : 1719530400000L);
                 System.out.println("Before: " + before + " After: " + after);
                 Predicate data = criteriaBuilder.between(root.get("birthday"),
                         after, before
