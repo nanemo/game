@@ -39,7 +39,7 @@ public class PLayerService {
         String name = playerParams.get("name");
         String title = playerParams.get("title");
         Race race = playerParams.get("race") != null ? Race.valueOf(playerParams.get("race")) : null;
-        Profession profession = playerParams.get("profession") != null ? Profession.valueOf(playerParams.get("profession")) : null;
+        Profession profession = playerParams.get("profession") != null ? Profession.valueOf(playerParams.get("profession").toUpperCase()) : null;
         long after = playerParams.get("after") != null ? Long.parseLong(playerParams.get("after")) : 0;
         long before = playerParams.get("before") != null ? Long.parseLong(playerParams.get("before")) : 0;
         Boolean banned = playerParams.get("banned") != null ? Boolean.parseBoolean(playerParams.get("banned")) : null;
