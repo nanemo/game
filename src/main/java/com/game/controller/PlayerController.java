@@ -32,17 +32,17 @@ class PlayerController {
     }
 
     @PostMapping("/players")
-    Player newPlayer(@RequestBody Player player) {
+    public Player newPlayer(@RequestBody Player player) {
         return service.create(player);
     }
 
     @GetMapping("/players/{id}")
-    Player getPlayer(@PathVariable String id) throws PlayerNotFoundException {
+    public Player getPlayer(@PathVariable String id) throws PlayerNotFoundException {
         return service.getPlayerById(id);
     }
 
     @PostMapping("/players/{id}")
-    Player replacePlayer(@PathVariable String id, @RequestBody Player newPlayer) {
+    public Player replacePlayer(@PathVariable String id, @RequestBody Player newPlayer) {
         return service.update(id, newPlayer);
     }
 

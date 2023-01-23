@@ -2,8 +2,9 @@ package com.game.service;
 
 import com.game.controller.PlayerOrder;
 import com.game.entity.Player;
+import com.game.entity.Profession;
+import com.game.entity.Race;
 import com.game.repository.PlayerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -12,100 +13,85 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Validated
 public class PLayerService {
-    @Autowired
-    private PlayerRepository playerRepository;
+    private final PlayerRepository playerRepository;
     private static final String BAD_REQUEST_MESSAGE = "Given ID is invalid: ";
     private static final String NOT_FOUND_REQUEST_MESSAGE = "ID is not found: ";
+
+    public PLayerService(PlayerRepository playerRepository) {
+        this.playerRepository = playerRepository;
+    }
 
 
     /**
      * method can not search by name, title, after, before....
-     *
-     * */
+     */
     public List<Player> findAll(Map<String, String> playerParams) {
-        List<Player> players = new ArrayList<>();
-        int pageNumber = Integer.parseInt(playerParams.get("pageNumber"));
 
+        int pageNumber = Integer.parseInt(playerParams.get("pageNumber"));
+        //DECLARING INITIAL VARIABLES FOR FILTERING
+        String name = playerParams.get("name");
+        String title = playerParams.get("title");
+        Race race = Race.valueOf(playerParams.get("race"));
+        Profession profession = Profession.valueOf(playerParams.get("profession"));
+        long after = Long.parseLong(playerParams.get("after"));
+        long before = Long.parseLong(playerParams.get("before"));
+        boolean banned = Boolean.parseBoolean(playerParams.get("banned"));
+        int minExperience = Integer.parseInt(playerParams.get("minExperience"));
+        int maxExperience = Integer.parseInt(playerParams.get("maxExperience"));
+        int minLevel = Integer.parseInt(playerParams.get("minLevel"));
+        int maxLevel = Integer.parseInt(playerParams.get("maxLevel"));
         int pageSize = Integer.parseInt(playerParams.get("pageSize"));
         String playerOrder = PlayerOrder.valueOf(playerParams.get("order")).getFieldName();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(playerOrder));
-        List<Player> allPlayersFromDB = playerRepository.findAll(pageable).toList();
+        List<Player> players = playerRepository.findAll(pageable).toList();
+
 
         if (playerParams.size() == 3) {
-            return allPlayersFromDB;
+            return players;
         }
 
-        if (playerParams.get("name") != null) {
-            players = searchPlayersByName(playerParams, allPlayersFromDB);
+        if (name != null) {
+            players = players
+                    .stream()
+                    .filter(player -> player.getName().toLowerCase().contains(name.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+        if (title != null) {
+            players = players
+                    .stream()
+                    .filter(player -> player.getTitle().toLowerCase().contains(title.toLowerCase()))
+                    .collect(Collectors.toList());
         }
 
-        if (playerParams.get("title") != null) {
-            players = searchPlayersByTitle(playerParams, allPlayersFromDB);
+        if (after != 0) {
+            players = players
+                    .stream()
+                    .filter(player -> player.getBirthday().getTime() > after)
+                    .collect(Collectors.toList());
         }
-
-        if (playerParams.get("after") != null) {
-
+        if (before != 0) {
+            players = players.stream().filter(player -> player.getBirthday().getTime() < before).collect(Collectors.toList());
         }
-
-        if (playerParams.get("before") != null) {
-
-        }
-
-//        if (Long.parseLong(playerParams.get("after")) == null)
-
-//        String name = ;
-//        String title = ;
-//        Race race = Race.valueOf(playerParams.get("race"));
-//        Profession profession = Profession.valueOf(playerParams.get("profession"));
-//
-//        Long after = ;
-//        Long before = Long.parseLong(playerParams.get("before"));
-//        Boolean banned = Boolean.parseBoolean(playerParams.get("banned"));
-//        Integer minExperience = Integer.parseInt(playerParams.get("minExperience"));
-//        Integer maxExperience = Integer.parseInt(playerParams.get("maxExperience"));
-//        Integer minLevel = Integer.parseInt(playerParams.get("minLevel"));
-//        Integer maxLevel = Integer.parseInt(playerParams.get("maxLevel"));
+        players = players.stream().
+                filter(player -> player.getRace().equals(race)).
+                filter(player -> player.getProfession().equals(profession)).
+                filter(player -> player.getBanned() == banned).
+                filter(player -> player.getExperience() > minExperience).
+                filter(player -> player.getExperience() < maxExperience).
+                filter(player -> player.getLevel() > minLevel).
+                filter(player -> player.getLevel() < maxLevel).
+                collect(Collectors.toList());
 
         return players;
     }
 
-    private List<Player> searchPlayersByTitle(Map<String, String> playerParams, List<Player> allPlayersFromDB) {
-        List<Player> pickedUpPlayers = new ArrayList<>();
-        for (Player playerFromDB : allPlayersFromDB) {
-            if (playerParams.get("title") != null || playerFromDB.getTitle().contains(playerParams.get("title").trim())) {
-                System.out.println(playerParams.get("title") + " title");
-                pickedUpPlayers.add(playerFromDB);
-            }
-        }
-        return pickedUpPlayers;
-
-    }
-
-    private List<Player> searchPlayersByName(Map<String, String> playerParams, List<Player> allPlayersFromDB) {
-        List<Player> pickedUpPlayers = new ArrayList<>();
-        for (Player playerFromDB : allPlayersFromDB) {
-            if (playerParams.get("name") != null || playerFromDB.getName().contains(playerParams.get("name").trim())) {
-                System.out.println(playerParams.get("name") + " name");
-                pickedUpPlayers.add(playerFromDB);
-            }
-        }
-        return pickedUpPlayers;
-
-    }
-
-    private void searchPlayersByBirthday(List<Player> players) {
-
-    }
 
     public Integer count() {
         return (int) playerRepository.count();
@@ -124,16 +110,11 @@ public class PLayerService {
  * In the case of all of the above, you must answer
  * error code 400.
  * */
-        Date date = new Date();
-        DateFormat simple = new SimpleDateFormat("yyyy");
-        Date birthday = player.getBirthday();
 
         if (player.getName().isEmpty() || player.getExperience() < 0 || player.getExperience() > 10000000
-                || player.getBirthday().getTime() < 0 || Integer.parseInt(simple.format(date)) < 2000
-                || Integer.parseInt(simple.format(date)) > 3000) {
+                || player.getBirthday().getTime() < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, BAD_REQUEST_MESSAGE + player.getId());
         }
-
         player.setLevel(getCurrentLevel(player));
         player.setUntilNextLevel(getUntilNextLevel(player));
         return playerRepository.save(player);
