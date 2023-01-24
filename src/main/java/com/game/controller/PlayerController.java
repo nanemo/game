@@ -4,7 +4,7 @@ package com.game.controller;
 import com.game.entity.Player;
 import com.game.exception.PlayerNotFoundException;
 import com.game.service.PLayerService;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,22 +27,22 @@ class PlayerController {
     }
 
     @GetMapping("/players/count")
-    int count() {
-        return service.count();
+    int count(@RequestParam Map<String, String> playerParams) {
+        return service.count(playerParams);
     }
 
     @PostMapping("/players")
-    Player newPlayer(@RequestBody Player player) {
+    public Player newPlayer(@RequestBody Player player) {
         return service.create(player);
     }
 
     @GetMapping("/players/{id}")
-    Player getPlayer(@PathVariable String id) throws PlayerNotFoundException {
+    public Player getPlayer(@PathVariable String id) throws PlayerNotFoundException {
         return service.getPlayerById(id);
     }
 
     @PostMapping("/players/{id}")
-    Player replacePlayer(@PathVariable String id, @RequestBody Player newPlayer) {
+    public ResponseEntity<Object> replacePlayer(@PathVariable String id, @RequestBody Player newPlayer) {
         return service.update(id, newPlayer);
     }
 
